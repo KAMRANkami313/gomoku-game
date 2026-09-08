@@ -1,37 +1,94 @@
-import { useState } from 'react'
+import { Sparkles, Trophy, Brain } from 'lucide-react'
 import { GomokuBoard } from './components/GomokuBoard'
-import { createEmptyBoard } from './lib/types'
-import { applyMove } from './lib/logic'
-import type { Board, Position, Player } from './lib/types'
+import { GamePanel } from './components/GamePanel'
+import { useGomoku } from './hooks/useGomoku'
 import './styles/app.css'
+import './styles/game.css'
 
 function App() {
-  const [board, setBoard] = useState<Board>(() => createEmptyBoard())
-  const [lastMove, setLastMove] = useState<Position | null>(null)
-  const [player, setPlayer] = useState<Player>(1)
+  const game = useGomoku()
+  const boardDisabled =
+    game.status !== 'playing' ||
+    game.isAiThinking ||
+    game.currentPlayer !== 1
 
-  const handleClick = (row: number, col: number) => {
-    if (board[row][col] !== 0) return
-    const next = applyMove(board, row, col, player)
-    setBoard(next)
-    setLastMove({ row, col })
-    setPlayer(player === 1 ? 2 : 1)
-  }
+  const hint =
+    game.status === 'playing'
+      ? game.currentPlayer === 1
+        ? 'Click an empty intersection to place a black stone.'
+        : 'Waiting for the AI to respond…'
+      : 'Game complete. Press Restart to play again.'
+
+  const difficultyLabel =
+    game.difficulty === 'easy'
+      ? 'Easy mode: heuristic play with light randomness.'
+      : game.difficulty === 'medium'
+        ? 'Medium mode: 2-ply minimax search with tactical shortcuts.'
+        : 'Hard mode: 4-ply minimax with alpha-beta pruning and move ordering.'
 
   return (
     <main className="app">
-      <h1 className="app__title">Gomoku</h1>
-      <p className="app__subtitle">Five-in-a-Row vs a strategic AI</p>
-      <p className="app__status">Batch 5 preview — click to place stones.</p>
-      <div style={{ marginTop: '2rem' }}>
-        <GomokuBoard
-          board={board}
-          onCellClick={handleClick}
-          lastMove={lastMove}
-          winningLine={null}
-          disabled={false}
-        />
+      <header className="app__header">
+        <div className="app__brand">
+          <div className="app__logo">
+            <span className="app__logo-dot" />
+          </div>
+          <div>
+            <div className="app__title">Gomoku</div>
+            <div className="app__subtitle">Five-in-a-Row vs a strategic AI</div>
+          </div>
+        </div>
+        <div className="app__badges">
+          <span className="app__badge">
+            <Sparkles size={14} />
+            Minimax + Alpha-Beta
+          </span>
+          <span className="app__badge">
+            <Trophy size={14} />
+            Move {game.moveCount}
+          </span>
+        </div>
+      </header>
+
+      <div className="game">
+        <div className="game__board-col">
+          <GomokuBoard
+            board={game.board}
+            onCellClick={game.playMove}
+            lastMove={game.lastMove}
+            winningLine={game.winningLine}
+            disabled={boardDisabled}
+          />
+          <p className="game__hint">{hint}</p>
+        </div>
+        <aside className="game__panel-col">
+          <GamePanel
+            status={game.status}
+            currentPlayer={game.currentPlayer}
+            difficulty={game.difficulty}
+            isAiThinking={game.isAiThinking}
+            moves={game.moves}
+            onUndo={game.undo}
+            onRestart={game.restart}
+            onDifficultyChange={game.setDifficulty}
+            playerScore={game.playerScore}
+            aiScore={game.aiScore}
+            drawScore={game.drawScore}
+          />
+        </aside>
       </div>
+
+      <footer className="app__footer">
+        <div className="app__footer-content">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+            <Brain size={14} />
+            {difficultyLabel}
+          </span>
+          <span style={{ opacity: 0.7 }}>
+            Standard 15×15 board · Five-in-a-row wins
+          </span>
+        </div>
+      </footer>
     </main>
   )
 }
