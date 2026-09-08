@@ -1,12 +1,34 @@
+import { useEffect, useRef } from 'react'
 import { Sparkles, Trophy, Brain } from 'lucide-react'
 import { GomokuBoard } from './components/GomokuBoard'
 import { GamePanel } from './components/GamePanel'
+import { ToastContainer } from './components/ToastContainer'
 import { useGomoku } from './hooks/useGomoku'
+import { useToast } from './hooks/useToast'
+import type { GameStatus } from './lib/types'
 import './styles/app.css'
 import './styles/game.css'
+import './styles/toast.css'
 
 function App() {
   const game = useGomoku()
+  const toast = useToast()
+  const prevStatusRef = useRef<GameStatus>('playing')
+
+  useEffect(() => {
+    if (prevStatusRef.current === game.status) return
+    const prev = prevStatusRef.current
+    prevStatusRef.current = game.status
+
+    if (prev === 'playing' && game.status === 'player_wins') {
+      toast.show('Victory! Five in a row — well played.', 'success')
+    } else if (prev === 'playing' && game.status === 'ai_wins') {
+      toast.show('AI wins. Better luck next round!', 'error')
+    } else if (prev === 'playing' && game.status === 'draw') {
+      toast.show('Draw — board is full with no winner.', 'info')
+    }
+  }, [game.status, toast])
+
   const boardDisabled =
     game.status !== 'playing' ||
     game.isAiThinking ||
@@ -89,6 +111,8 @@ function App() {
           </span>
         </div>
       </footer>
+
+      <ToastContainer toasts={toast.toasts} onDismiss={toast.dismiss} />
     </main>
   )
 }

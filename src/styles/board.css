@@ -1,0 +1,16 @@
+.stone-appear {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: stone-appear 0.25s ease-out;
+}
+
+@keyframes stone-appear {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

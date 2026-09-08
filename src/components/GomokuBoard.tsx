@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { BOARD_SIZE } from '../lib/types'
 import type { Board, Position } from '../lib/types'
+import '../styles/board.css'
 
 interface GomokuBoardProps {
   board: Board
@@ -89,7 +90,7 @@ function GomokuBoardImpl({
       const isLast = !!lastMove && lastMove.row === r && lastMove.col === c
 
       stones.push(
-        <g key={`stone-${r}-${c}`}>
+        <g key={`stone-${r}-${c}`} className="stone-appear">
           <circle
             cx={x}
             cy={y}
