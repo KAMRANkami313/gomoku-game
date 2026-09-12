@@ -42,6 +42,12 @@ export interface GomokuActions {
   setDifficulty: (d: Difficulty) => void
   setMode: (m: GameMode) => void
   setSoundEnabled: (enabled: boolean) => void
+  restore: (snapshot: {
+    board: Board
+    status: GameStatus
+    currentPlayer: Player
+    moves: MoveRecord[]
+  }) => void
 }
 
 export function useGomoku(): GomokuState & GomokuActions {
@@ -186,7 +192,41 @@ export function useGomoku(): GomokuState & GomokuActions {
     setLastMove(null)
   }, [])
 
-   return {
+    const restore = useCallback(
+    (snapshot: {
+      board: Board
+      status: GameStatus
+      currentPlayer: Player
+      moves: MoveRecord[]
+    }) => {
+      setBoard(snapshot.board)
+      setStatus(snapshot.status)
+      setCurrentPlayer(snapshot.currentPlayer)
+      setMoves(snapshot.moves)
+      setLastMove(
+        snapshot.moves.length > 0
+          ? {
+              row: snapshot.moves[snapshot.moves.length - 1].row,
+              col: snapshot.moves[snapshot.moves.length - 1].col,
+            }
+          : null,
+      )
+      if (snapshot.status === 'player_wins' || snapshot.status === 'ai_wins') {
+        setWinningLine(
+          detectWin(
+            snapshot.board,
+            snapshot.moves[snapshot.moves.length - 1].row,
+            snapshot.moves[snapshot.moves.length - 1].col,
+          ),
+        )
+      } else {
+        setWinningLine(null)
+      }
+    },
+    [],
+  )
+
+  return {
     board,
     status,
     currentPlayer,
@@ -206,5 +246,6 @@ export function useGomoku(): GomokuState & GomokuActions {
     setDifficulty,
     setMode,
     setSoundEnabled,
+    restore,
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Sparkles, Trophy, Brain } from 'lucide-react'
 import { GomokuBoard } from './components/GomokuBoard'
 import { GamePanel } from './components/GamePanel'
@@ -10,6 +10,10 @@ import { useStats } from './hooks/useStats'
 import { ModeSelector } from './components/ModeSelector'
 import { SoundToggle } from './components/SoundToggle'
 import { useSound } from './hooks/useSound'
+import { ReplayBar } from './components/ReplayBar'
+import { useGamePersistence } from './hooks/useGamePersistence'
+import { useReplay } from './hooks/useReplay'
+import { buildBoardFromMoves } from './lib/gameState'
 import { useGomoku } from './hooks/useGomoku'
 import { useToast } from './hooks/useToast'
 import type { GameStatus } from './lib/types'
@@ -25,9 +29,23 @@ function App() {
   const statsHook = useStats(game.status, game.moveCount)
   const prevStatusRef = useRef<GameStatus>('playing')
 
-    useEffect(() => {
-    game.setSoundEnabled(sound.enabled)
-  }, [sound.enabled, game])
+  useGamePersistence(
+    game.board,
+    game.status,
+    game.currentPlayer,
+    game.moves,
+    game.mode,
+    game.difficulty,
+    game.restore,
+  )
+
+  const gameComplete = game.status !== 'playing'
+  const replay = useReplay(game.moves, gameComplete)
+
+  const setSoundEnabled = game.setSoundEnabled
+  useEffect(() => {
+    setSoundEnabled(sound.enabled)
+  }, [sound.enabled, setSoundEnabled])
 
   useEffect(() => {
     if (prevStatusRef.current === game.status) return
@@ -44,11 +62,27 @@ function App() {
   }, [game.status, toast])
 
   const boardDisabled =
+    replay.active ||
     game.status !== 'playing' ||
     game.isAiThinking ||
     (game.mode === 'ai' && game.currentPlayer !== 1)
 
-  const modeSelectorDisabled = game.moveCount > 0 || game.status !== 'playing'
+  const modeSelectorDisabled =
+    game.moveCount > 0 || game.status !== 'playing'
+
+  const displayBoard = useMemo(() => {
+    if (!replay.active) return game.board
+    return buildBoardFromMoves(game.moves, replay.step)
+  }, [replay.active, replay.step, game.board, game.moves])
+
+  const displayLastMove = useMemo(() => {
+    if (!replay.active) return game.lastMove
+    if (replay.step === 0) return null
+    const m = game.moves[replay.step - 1]
+    return { row: m.row, col: m.col }
+  }, [replay.active, replay.step, game.lastMove, game.moves])
+
+  const displayWinningLine = replay.active ? null : game.winningLine
 
   const hint =
     game.status === 'playing'
@@ -99,13 +133,35 @@ function App() {
       <div className="game">
         <div className="game__board-col">
           <GomokuBoard
-            board={game.board}
+            board={displayBoard}
             onCellClick={game.playMove}
-            lastMove={game.lastMove}
-            winningLine={game.winningLine}
+            lastMove={displayLastMove}
+            winningLine={displayWinningLine}
             disabled={boardDisabled}
           />
           <p className="game__hint">{hint}</p>
+                    {gameComplete && !replay.active && (
+            <button
+              type="button"
+              className="game-panel__btn game-panel__btn--solid"
+              onClick={replay.enter}
+            >
+              Watch Replay
+            </button>
+          )}
+          {replay.active && (
+            <ReplayBar
+              step={replay.step}
+              total={game.moves.length}
+              playing={replay.playing}
+              onPrev={replay.goPrev}
+              onNext={replay.goNext}
+              onFirst={replay.goToStart}
+              onLast={replay.goToEnd}
+              onTogglePlay={replay.togglePlay}
+              onExit={replay.exit}
+            />
+          )}
         </div>
         <aside className="game__panel-col">
           <ModeSelector

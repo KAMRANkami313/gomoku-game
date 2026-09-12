@@ -51,8 +51,8 @@ export function playSound(type: SoundType): void {
   const now = ctx.currentTime
 
   if (type === 'place') {
-    playTone(ctx, 180, 0.08, now, 0.15, 'sine')
-    playTone(ctx, 90, 0.05, now + 0.005, 0.1, 'triangle')
+    playTone(ctx, 440, 0.12, now, 0.25, 'sine')
+    playTone(ctx, 220, 0.08, now + 0.005, 0.2, 'triangle')
     return
   }
 
