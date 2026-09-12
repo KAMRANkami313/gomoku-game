@@ -36,6 +36,11 @@
   background: var(--color-primary);
 }
 
+.dark .toast--info {
+  background: #e7e5e4;
+  color: #1c1917;
+}
+
 .toast__icon {
   font-size: 1rem;
   font-weight: 700;

@@ -26,6 +26,11 @@
   touch-action: manipulation;
 }
 
+.dark .gomoku-board {
+  background: linear-gradient(135deg, #57534e 0%, #44403c 40%, #292524 100%);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
 .gomoku-board__svg {
   display: block;
   width: 100%;
@@ -182,6 +187,11 @@
   padding: 0.75rem;
 }
 
+.dark .game-panel__section {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
 .game-panel__section-label {
   display: flex;
   align-items: center;
@@ -284,6 +294,11 @@
   background: var(--color-surface);
 }
 
+.dark .game-panel__history {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
 .game-panel__history-header {
   display: flex;
   align-items: center;
@@ -348,6 +363,14 @@
   background: #fffbeb;
 }
 
+.dark .game-panel__move--black {
+  background: #292524;
+}
+
+.dark .game-panel__move--white {
+  background: #422006;
+}
+
 .game-panel__move-number {
   font-family: monospace;
   font-size: 0.625rem;
@@ -390,4 +413,9 @@
   text-align: center;
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+
+.dark .game-panel__game-over {
+  background: var(--color-secondary);
+  border-color: var(--color-border);
 }

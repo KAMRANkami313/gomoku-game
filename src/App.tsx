@@ -3,6 +3,8 @@ import { Sparkles, Trophy, Brain } from 'lucide-react'
 import { GomokuBoard } from './components/GomokuBoard'
 import { GamePanel } from './components/GamePanel'
 import { ToastContainer } from './components/ToastContainer'
+import { ThemeToggle } from './components/ThemeToggle'
+import { useTheme } from './hooks/useTheme'
 import { useGomoku } from './hooks/useGomoku'
 import { useToast } from './hooks/useToast'
 import type { GameStatus } from './lib/types'
@@ -13,6 +15,7 @@ import './styles/toast.css'
 function App() {
   const game = useGomoku()
   const toast = useToast()
+  const theme = useTheme()
   const prevStatusRef = useRef<GameStatus>('playing')
 
   useEffect(() => {
@@ -60,15 +63,18 @@ function App() {
             <div className="app__subtitle">Five-in-a-Row vs a strategic AI</div>
           </div>
         </div>
-        <div className="app__badges">
-          <span className="app__badge">
-            <Sparkles size={14} />
-            Minimax + Alpha-Beta
-          </span>
-          <span className="app__badge">
-            <Trophy size={14} />
-            Move {game.moveCount}
-          </span>
+        <div className="app__header-right">
+          <div className="app__badges">
+            <span className="app__badge">
+              <Sparkles size={14} />
+              Minimax + Alpha-Beta
+            </span>
+            <span className="app__badge">
+              <Trophy size={14} />
+              Move {game.moveCount}
+            </span>
+          </div>
+          <ThemeToggle mode={theme.mode} onToggle={theme.toggle} />
         </div>
       </header>
 
