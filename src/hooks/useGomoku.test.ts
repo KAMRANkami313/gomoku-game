@@ -222,3 +222,78 @@ describe('useGomoku — setDifficulty', () => {
     expect(result.current.difficulty).toBe('easy')
   })
 })
+
+describe('useGomoku — pvp mode', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('starts in ai mode by default', () => {
+    const { result } = renderHook(() => useGomoku())
+    expect(result.current.mode).toBe('ai')
+  })
+
+  it('switches to pvp mode', () => {
+    const { result } = renderHook(() => useGomoku())
+    act(() => {
+      result.current.setMode('pvp')
+    })
+    expect(result.current.mode).toBe('pvp')
+  })
+
+  it('allows player 2 to move after player 1 in pvp mode', () => {
+    const { result } = renderHook(() => useGomoku())
+    act(() => {
+      result.current.setMode('pvp')
+    })
+    act(() => {
+      result.current.playMove(7, 7)
+    })
+    expect(result.current.currentPlayer).toBe(2)
+    expect(result.current.isAiThinking).toBe(false)
+
+    act(() => {
+      result.current.playMove(7, 8)
+    })
+    expect(result.current.currentPlayer).toBe(1)
+    expect(result.current.moveCount).toBe(2)
+  })
+
+    it('does not trigger AI in pvp mode', async () => {
+    const { result } = renderHook(() => useGomoku())
+    act(() => {
+      result.current.setMode('pvp')
+    })
+    act(() => {
+      result.current.playMove(7, 7)
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(result.current.moveCount).toBe(1)
+    expect(result.current.currentPlayer).toBe(2)
+  })
+
+  it('undo removes only one move in pvp mode', () => {
+    const { result } = renderHook(() => useGomoku())
+    act(() => {
+      result.current.setMode('pvp')
+    })
+    act(() => {
+      result.current.playMove(7, 7)
+    })
+    act(() => {
+      result.current.playMove(7, 8)
+    })
+    expect(result.current.moveCount).toBe(2)
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.moveCount).toBe(1)
+    expect(result.current.currentPlayer).toBe(2)
+  })
+})

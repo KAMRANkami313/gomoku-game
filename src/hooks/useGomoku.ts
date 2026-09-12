@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   Board,
   Difficulty,
+  GameMode,
   GameStatus,
   MoveRecord,
   Player,
   Position,
 } from '../lib/types'
 import { createEmptyBoard } from '../lib/types'
+import { loadState, saveState } from '../lib/storage'
 import { applyMove, detectWin, getGameStatus, isLegalMove } from '../lib/logic'
 import { chooseAIMove } from '../lib/ai'
 
@@ -24,6 +26,7 @@ export interface GomokuState {
   lastMove: Position | null
   isAiThinking: boolean
   difficulty: Difficulty
+  mode: GameMode
   moveCount: number
   playerScore: number
   aiScore: number
@@ -35,6 +38,7 @@ export interface GomokuActions {
   undo: () => void
   restart: () => void
   setDifficulty: (d: Difficulty) => void
+  setMode: (m: GameMode) => void
 }
 
 export function useGomoku(): GomokuState & GomokuActions {
@@ -45,12 +49,16 @@ export function useGomoku(): GomokuState & GomokuActions {
   const [winningLine, setWinningLine] = useState<Position[] | null>(null)
   const [lastMove, setLastMove] = useState<Position | null>(null)
   const [difficulty, setDifficulty] = useState<Difficulty>('medium')
+  const [mode, setModeState] = useState<GameMode>(() =>
+    loadState<GameMode>('mode', 'ai'),
+  )
   const [playerScore, setPlayerScore] = useState(0)
   const [aiScore, setAiScore] = useState(0)
   const [drawScore, setDrawScore] = useState(0)
 
   const moveCount = moves.length
-  const isAiThinking = status === 'playing' && currentPlayer === AI_PLAYER
+  const isAiThinking =
+    mode === 'ai' && status === 'playing' && currentPlayer === AI_PLAYER
 
   const difficultyRef = useRef(difficulty)
   useEffect(() => {
@@ -96,13 +104,14 @@ export function useGomoku(): GomokuState & GomokuActions {
   const playMove = useCallback(
     (row: number, col: number) => {
       if (isAiThinking) return
-      if (currentPlayer !== HUMAN_PLAYER) return
-      placeStone(row, col, HUMAN_PLAYER)
+      if (mode === 'ai' && currentPlayer !== HUMAN_PLAYER) return
+      placeStone(row, col, currentPlayer)
     },
-    [currentPlayer, isAiThinking, placeStone],
+    [currentPlayer, isAiThinking, mode, placeStone],
   )
 
   useEffect(() => {
+    if (mode !== 'ai') return
     if (status !== 'playing') return
     if (currentPlayer !== AI_PLAYER) return
 
@@ -117,15 +126,22 @@ export function useGomoku(): GomokuState & GomokuActions {
     }, AI_THINK_DELAY_MS)
 
     return () => clearTimeout(timer)
-  }, [currentPlayer, status, board, placeStone])
+  }, [mode, currentPlayer, status, board, placeStone])
+
+    const setMode = useCallback((next: GameMode) => {
+    setModeState(next)
+    saveState('mode', next)
+  }, [])
 
   const undo = useCallback(() => {
     if (moves.length === 0) return
     if (status !== 'playing') return
-    if (currentPlayer === AI_PLAYER) return
+    if (mode === 'ai' && currentPlayer === AI_PLAYER) return
 
-    const undoCount = moves[moves.length - 1].player === AI_PLAYER ? 2 : 1
+    const undoCount =
+      mode === 'ai' && moves[moves.length - 1].player === AI_PLAYER ? 2 : 1
     const keepCount = Math.max(0, moves.length - undoCount)
+    const nextPlayer = moves[keepCount].player
 
     const newBoard = createEmptyBoard()
     const kept = moves.slice(0, keepCount)
@@ -145,8 +161,8 @@ export function useGomoku(): GomokuState & GomokuActions {
         : null,
     )
     setStatus('playing')
-    setCurrentPlayer(HUMAN_PLAYER)
-  }, [moves, status, currentPlayer])
+    setCurrentPlayer(nextPlayer)
+  }, [moves, status, currentPlayer, mode])
 
   const restart = useCallback(() => {
     setBoard(createEmptyBoard())
@@ -166,6 +182,7 @@ export function useGomoku(): GomokuState & GomokuActions {
     lastMove,
     isAiThinking,
     difficulty,
+    mode,
     moveCount,
     playerScore,
     aiScore,
@@ -174,5 +191,6 @@ export function useGomoku(): GomokuState & GomokuActions {
     undo,
     restart,
     setDifficulty,
+    setMode,
   }
 }

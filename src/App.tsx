@@ -7,6 +7,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 import { useTheme } from './hooks/useTheme'
 import { StatsPanel } from './components/StatsPanel'
 import { useStats } from './hooks/useStats'
+import { ModeSelector } from './components/ModeSelector'
 import { useGomoku } from './hooks/useGomoku'
 import { useToast } from './hooks/useToast'
 import type { GameStatus } from './lib/types'
@@ -38,13 +39,19 @@ function App() {
   const boardDisabled =
     game.status !== 'playing' ||
     game.isAiThinking ||
-    game.currentPlayer !== 1
+    (game.mode === 'ai' && game.currentPlayer !== 1)
+
+  const modeSelectorDisabled = game.moveCount > 0 || game.status !== 'playing'
 
   const hint =
     game.status === 'playing'
-      ? game.currentPlayer === 1
-        ? 'Click an empty intersection to place a black stone.'
-        : 'Waiting for the AI to respond…'
+      ? game.mode === 'pvp'
+        ? game.currentPlayer === 1
+          ? "Black's turn — click to place a stone."
+          : "White's turn — click to place a stone."
+        : game.currentPlayer === 1
+          ? 'Click an empty intersection to place a black stone.'
+          : 'Waiting for the AI to respond…'
       : 'Game complete. Press Restart to play again.'
 
   const difficultyLabel =
@@ -93,6 +100,11 @@ function App() {
           <p className="game__hint">{hint}</p>
         </div>
         <aside className="game__panel-col">
+          <ModeSelector
+            mode={game.mode}
+            onModeChange={game.setMode}
+            disabled={modeSelectorDisabled}
+          />
           <GamePanel
             status={game.status}
             currentPlayer={game.currentPlayer}
