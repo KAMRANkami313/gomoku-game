@@ -199,3 +199,52 @@ describe('GomokuBoard — winning line highlight', () => {
     expect(greenRings.length).toBe(5)
   })
 })
+
+describe('GomokuBoard — responsive layout', () => {
+  it('has a viewBox attribute on the svg', () => {
+    const { container } = render(
+      <GomokuBoard board={createEmptyBoard()} {...defaultProps} />,
+    )
+    const svg = container.querySelector('svg')
+    expect(svg?.getAttribute('viewBox')).not.toBeNull()
+    expect(svg?.getAttribute('viewBox')).not.toBe('')
+  })
+
+  it('does not have a fixed width attribute on the svg', () => {
+    const { container } = render(
+      <GomokuBoard board={createEmptyBoard()} {...defaultProps} />,
+    )
+    const svg = container.querySelector('svg')
+    expect(svg?.hasAttribute('width')).toBe(false)
+  })
+
+  it('does not have a fixed height attribute on the svg', () => {
+    const { container } = render(
+      <GomokuBoard board={createEmptyBoard()} {...defaultProps} />,
+    )
+    const svg = container.querySelector('svg')
+    expect(svg?.hasAttribute('height')).toBe(false)
+  })
+
+  it('has the gomoku-board class on the wrapper div', () => {
+    const { container } = render(
+      <GomokuBoard board={createEmptyBoard()} {...defaultProps} />,
+    )
+    expect(container.querySelector('.gomoku-board')).not.toBeNull()
+  })
+
+  it('has the gomoku-board__svg class on the svg', () => {
+    const { container } = render(
+      <GomokuBoard board={createEmptyBoard()} {...defaultProps} />,
+    )
+    expect(container.querySelector('.gomoku-board__svg')).not.toBeNull()
+  })
+
+  it('has an aria-label on the svg for accessibility', () => {
+    const { container } = render(
+      <GomokuBoard board={createEmptyBoard()} {...defaultProps} />,
+    )
+    const svg = container.querySelector('svg')
+    expect(svg?.getAttribute('aria-label')).toBe('Gomoku game board')
+  })
+})

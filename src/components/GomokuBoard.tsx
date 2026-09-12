@@ -157,21 +157,11 @@ function GomokuBoardImpl({
   }
 
   return (
-    <div
-      style={{
-        background:
-          'linear-gradient(135deg, #e6c489 0%, #d4a96a 40%, #c08948 100%)',
-        borderRadius: '16px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        userSelect: 'none',
-        width: 'fit-content',
-      }}
-    >
+    <div className="gomoku-board">
       <svg
-        width={BOARD_PX}
-        height={BOARD_PX}
         viewBox={`0 0 ${BOARD_PX} ${BOARD_PX}`}
-        style={{ display: 'block' }}
+        className="gomoku-board__svg"
+        aria-label="Gomoku game board"
       >
         <defs>
           <radialGradient id="black-stone" cx="0.35" cy="0.35" r="0.7">
