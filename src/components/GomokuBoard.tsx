@@ -130,6 +130,32 @@ function GomokuBoardImpl({
     }
   }
 
+  const winningLineElement = useMemo(() => {
+    if (!winningLine || winningLine.length < 2) return null
+
+    const first = toXY(winningLine[0].row, winningLine[0].col)
+    const last = toXY(
+      winningLine[winningLine.length - 1].row,
+      winningLine[winningLine.length - 1].col,
+    )
+
+    return (
+      <line
+        x1={first.x}
+        y1={first.y}
+        x2={last.x}
+        y2={last.y}
+        stroke="#22c55e"
+        strokeWidth={4}
+        strokeLinecap="round"
+        opacity={0.85}
+        className="winning-line"
+        pathLength={1}
+      />
+    )
+    
+  }, [winningLine])
+
   const clickTargets: ReactNode[] = []
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
@@ -178,6 +204,7 @@ function GomokuBoardImpl({
         {lines}
         {stars}
         {stones}
+        {winningLineElement}
         {clickTargets}
       </svg>
     </div>

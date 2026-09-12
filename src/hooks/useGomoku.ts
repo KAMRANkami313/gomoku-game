@@ -12,6 +12,8 @@ import { createEmptyBoard } from '../lib/types'
 import { loadState, saveState } from '../lib/storage'
 import { applyMove, detectWin, getGameStatus, isLegalMove } from '../lib/logic'
 import { chooseAIMove } from '../lib/ai'
+import { playSound } from '../lib/sound'
+import type { SoundType } from '../lib/sound'
 
 const AI_PLAYER: Player = 2
 const HUMAN_PLAYER: Player = 1
@@ -39,6 +41,7 @@ export interface GomokuActions {
   restart: () => void
   setDifficulty: (d: Difficulty) => void
   setMode: (m: GameMode) => void
+  setSoundEnabled: (enabled: boolean) => void
 }
 
 export function useGomoku(): GomokuState & GomokuActions {
@@ -52,6 +55,7 @@ export function useGomoku(): GomokuState & GomokuActions {
   const [mode, setModeState] = useState<GameMode>(() =>
     loadState<GameMode>('mode', 'ai'),
   )
+  const soundEnabledRef = useRef(true)
   const [playerScore, setPlayerScore] = useState(0)
   const [aiScore, setAiScore] = useState(0)
   const [drawScore, setDrawScore] = useState(0)
@@ -85,11 +89,16 @@ export function useGomoku(): GomokuState & GomokuActions {
         setWinningLine(detectWin(nextBoard, row, col))
         if (nextStatus === 'player_wins') setPlayerScore((s) => s + 1)
         else setAiScore((s) => s + 1)
+        const sound: SoundType =
+          nextStatus === 'player_wins' ? 'win' : 'loss'
+        if (soundEnabledRef.current) playSound(sound)
       } else if (nextStatus === 'draw') {
         setWinningLine(null)
         setDrawScore((s) => s + 1)
+        if (soundEnabledRef.current) playSound('draw')
       } else {
         setWinningLine(null)
+        if (soundEnabledRef.current) playSound('place')
       }
 
       setStatus(nextStatus)
@@ -132,6 +141,10 @@ export function useGomoku(): GomokuState & GomokuActions {
     setModeState(next)
     saveState('mode', next)
   }, [])
+    const setSoundEnabled = useCallback((enabled: boolean) => {
+    soundEnabledRef.current = enabled
+  }, [])
+
 
   const undo = useCallback(() => {
     if (moves.length === 0) return
@@ -173,7 +186,7 @@ export function useGomoku(): GomokuState & GomokuActions {
     setLastMove(null)
   }, [])
 
-  return {
+   return {
     board,
     status,
     currentPlayer,
@@ -192,5 +205,6 @@ export function useGomoku(): GomokuState & GomokuActions {
     restart,
     setDifficulty,
     setMode,
+    setSoundEnabled,
   }
 }

@@ -8,6 +8,8 @@ import { useTheme } from './hooks/useTheme'
 import { StatsPanel } from './components/StatsPanel'
 import { useStats } from './hooks/useStats'
 import { ModeSelector } from './components/ModeSelector'
+import { SoundToggle } from './components/SoundToggle'
+import { useSound } from './hooks/useSound'
 import { useGomoku } from './hooks/useGomoku'
 import { useToast } from './hooks/useToast'
 import type { GameStatus } from './lib/types'
@@ -19,8 +21,13 @@ function App() {
   const game = useGomoku()
   const toast = useToast()
   const theme = useTheme()
+  const sound = useSound()
   const statsHook = useStats(game.status, game.moveCount)
   const prevStatusRef = useRef<GameStatus>('playing')
+
+    useEffect(() => {
+    game.setSoundEnabled(sound.enabled)
+  }, [sound.enabled, game])
 
   useEffect(() => {
     if (prevStatusRef.current === game.status) return
@@ -85,6 +92,7 @@ function App() {
             </span>
           </div>
           <ThemeToggle mode={theme.mode} onToggle={theme.toggle} />
+          <SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />
         </div>
       </header>
 
