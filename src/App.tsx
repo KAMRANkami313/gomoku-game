@@ -5,6 +5,8 @@ import { GamePanel } from './components/GamePanel'
 import { ToastContainer } from './components/ToastContainer'
 import { ThemeToggle } from './components/ThemeToggle'
 import { useTheme } from './hooks/useTheme'
+import { StatsPanel } from './components/StatsPanel'
+import { useStats } from './hooks/useStats'
 import { useGomoku } from './hooks/useGomoku'
 import { useToast } from './hooks/useToast'
 import type { GameStatus } from './lib/types'
@@ -16,6 +18,7 @@ function App() {
   const game = useGomoku()
   const toast = useToast()
   const theme = useTheme()
+  const statsHook = useStats(game.status, game.moveCount)
   const prevStatusRef = useRef<GameStatus>('playing')
 
   useEffect(() => {
@@ -103,6 +106,7 @@ function App() {
             aiScore={game.aiScore}
             drawScore={game.drawScore}
           />
+          <StatsPanel stats={statsHook.stats} onReset={statsHook.reset} />
         </aside>
       </div>
 

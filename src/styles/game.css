@@ -419,3 +419,145 @@
   background: var(--color-secondary);
   border-color: var(--color-border);
 }
+
+.stats-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0.75rem;
+}
+
+.stats-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.stats-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.stats-panel__reset {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.stats-panel__reset:hover {
+  background: var(--color-secondary);
+  color: var(--color-text);
+}
+
+.stats-panel__empty {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+
+.stats-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stats-panel__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-secondary);
+}
+
+.stats-panel__stat-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.stats-panel__stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stats-panel__row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.stats-panel__row:last-child {
+  margin-bottom: 0;
+}
+
+.stats-panel__detail {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-secondary);
+}
+
+.stats-panel__detail-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: white;
+}
+
+.stats-panel__detail-icon.wins {
+  background: var(--color-success);
+}
+
+.stats-panel__detail-icon.losses {
+  background: var(--color-danger);
+}
+
+.stats-panel__detail-icon.draws {
+  background: #64748b;
+}
+
+.stats-panel__detail-icon.streak {
+  background: var(--color-warning);
+}
+
+.stats-panel__detail-icon.best {
+  background: var(--color-primary);
+}
+
+.stats-panel__detail-label {
+  flex: 1;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.stats-panel__detail-value {
+  font-weight: 700;
+  color: var(--color-text);
+}
