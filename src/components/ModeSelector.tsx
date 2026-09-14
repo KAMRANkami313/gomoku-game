@@ -1,4 +1,4 @@
-import { Bot, Users } from 'lucide-react'
+import { Bot, Users, Wifi } from 'lucide-react'
 import type { GameMode } from '../lib/types'
 
 interface ModeSelectorProps {
@@ -9,7 +9,7 @@ interface ModeSelectorProps {
 
 export function ModeSelector({ mode, onModeChange, disabled }: ModeSelectorProps) {
   return (
-    <div className="mode-selector">
+    <div className="mode-selector mode-selector--three">
       <button
         type="button"
         className={
@@ -32,7 +32,19 @@ export function ModeSelector({ mode, onModeChange, disabled }: ModeSelectorProps
         disabled={disabled}
       >
         <Users size={16} />
-        2 Players
+        2P
+      </button>
+      <button
+        type="button"
+        className={
+          'mode-selector__btn ' +
+          (mode === 'online' ? 'mode-selector__btn--active' : 'mode-selector__btn--inactive')
+        }
+        onClick={() => onModeChange('online')}
+        disabled={disabled}
+      >
+        <Wifi size={16} />
+        Online
       </button>
     </div>
   )

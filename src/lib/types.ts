@@ -23,7 +23,7 @@ export type Position = {
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
-export type GameMode = 'ai' | 'pvp'
+export type GameMode = 'ai' | 'pvp' | 'online'
 
 export type GameStatus = 'playing' | 'player_wins' | 'ai_wins' | 'draw'
 

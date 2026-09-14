@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Sparkles, Trophy, Brain, Settings } from 'lucide-react'
 import { GomokuBoard } from './components/GomokuBoard'
 import { GamePanel } from './components/GamePanel'
@@ -10,6 +10,10 @@ import { useStats } from './hooks/useStats'
 import { ModeSelector } from './components/ModeSelector'
 import { SettingsDialog } from './components/SettingsDialog'
 import { useSettings } from './hooks/useSettings'
+import { OnlineDialog } from './components/OnlineDialog'
+import { useOnlineMultiplayer } from './hooks/useOnlineMultiplayer'
+import { generateRoomCode, isValidRoomCode } from './lib/online'
+import type { OnlineMessage } from './lib/online'
 import { SoundToggle } from './components/SoundToggle'
 import { useSound } from './hooks/useSound'
 import { ReplayBar } from './components/ReplayBar'
@@ -18,7 +22,7 @@ import { useReplay } from './hooks/useReplay'
 import { buildBoardFromMoves } from './lib/gameState'
 import { useGomoku } from './hooks/useGomoku'
 import { useToast } from './hooks/useToast'
-import type { GameStatus } from './lib/types'
+import type { GameMode, GameStatus } from './lib/types'
 import './styles/app.css'
 import './styles/game.css'
 import './styles/toast.css'
@@ -30,6 +34,43 @@ function App() {
   const sound = useSound()
   const settingsHook = useSettings()
   const [settingsOpen, setSettingsOpen] = useState(false)
+    const [onlineOpen, setOnlineOpen] = useState(false)
+
+  const handleOnlineMessage = useCallback((msg: OnlineMessage) => {
+    if (msg.type === 'move') {
+      game.placeStone(msg.row, msg.col, msg.player)
+    } else if (msg.type === 'restart') {
+      game.restart()
+    } else if (msg.type === 'board_size') {
+      game.changeBoardSize(msg.size)
+    } else if (msg.type === 'sync') {
+      game.restore({
+        board: msg.board,
+        status: msg.status,
+        currentPlayer: msg.currentPlayer,
+        moves: msg.moves,
+      })
+    }
+  }, [game])
+
+  const online = useOnlineMultiplayer({
+    onMessage: handleOnlineMessage,
+    onConnected: () => {
+      if (online.isHost) {
+        online.send({
+          type: 'sync',
+          board: game.board,
+          moves: game.moves,
+          currentPlayer: game.currentPlayer,
+          status: game.status,
+          boardSize: game.boardSize,
+        })
+      }
+    },
+    onDisconnected: () => {
+      setOnlineOpen(true)
+    },
+  })
   const statsHook = useStats(game.status, game.moveCount)
   const prevStatusRef = useRef<GameStatus>('playing')
 
@@ -70,10 +111,40 @@ function App() {
     replay.active ||
     game.status !== 'playing' ||
     game.isAiThinking ||
-    (game.mode === 'ai' && game.currentPlayer !== 1)
+    (game.mode === 'ai' && game.currentPlayer !== 1) ||
+    (game.mode === 'online' &&
+      (online.status !== 'connected' ||
+        (online.isHost && game.currentPlayer !== 1) ||
+        (!online.isHost && game.currentPlayer !== 2)))
 
   const modeSelectorDisabled =
-    game.moveCount > 0 || game.status !== 'playing'
+    (game.moveCount > 0 && game.mode !== 'online') ||
+    (game.status !== 'playing' && game.mode !== 'online') ||
+    online.status === 'connected'
+
+  const handleModeChange = useCallback(
+    (mode: GameMode) => {
+      if (mode === 'online') {
+        setOnlineOpen(true)
+      }
+      game.setMode(mode)
+    },
+    [game],
+  )
+
+  const handleHost = useCallback(() => {
+    const code = generateRoomCode()
+    online.host(code)
+  }, [online])
+
+  const handleJoin = useCallback(
+    (code: string) => {
+      if (isValidRoomCode(code)) {
+        online.join(code)
+      }
+    },
+    [online],
+  )
 
   const displayBoard = useMemo(() => {
     if (!replay.active) return game.board
@@ -95,9 +166,15 @@ function App() {
         ? game.currentPlayer === 1
           ? "Black's turn — click to place a stone."
           : "White's turn — click to place a stone."
-        : game.currentPlayer === 1
-          ? 'Click an empty intersection to place a black stone.'
-          : 'Waiting for the AI to respond…'
+        : game.mode === 'online'
+          ? online.status !== 'connected'
+            ? 'Waiting for opponent to connect…'
+            : (online.isHost && game.currentPlayer === 1) || (!online.isHost && game.currentPlayer === 2)
+              ? 'Your turn — click to place a stone.'
+              : "Opponent's turn…"
+          : game.currentPlayer === 1
+            ? 'Click an empty intersection to place a black stone.'
+            : 'Waiting for the AI to respond…'
       : 'Game complete. Press Restart to play again.'
 
   const difficultyLabel =
@@ -148,7 +225,19 @@ function App() {
         <div className="game__board-col">
           <GomokuBoard
             board={displayBoard}
-            onCellClick={game.playMove}
+            onCellClick={(row, col) => {
+              if (game.mode === 'online' && online.status === 'connected') {
+                if (online.isHost && game.currentPlayer === 1) {
+                  game.placeStone(row, col, 1)
+                  online.send({ type: 'move', row, col, player: 1 })
+                } else if (!online.isHost && game.currentPlayer === 2) {
+                  game.placeStone(row, col, 2)
+                  online.send({ type: 'move', row, col, player: 2 })
+                }
+              } else {
+                game.playMove(row, col)
+              }
+            }}
             lastMove={displayLastMove}
             winningLine={displayWinningLine}
             disabled={boardDisabled}
@@ -180,7 +269,7 @@ function App() {
         <aside className="game__panel-col">
           <ModeSelector
             mode={game.mode}
-            onModeChange={game.setMode}
+            onModeChange={handleModeChange}
             disabled={modeSelectorDisabled}
           />
           <GamePanel
@@ -191,7 +280,12 @@ function App() {
             moves={game.moves}
             boardSize={game.boardSize}
             onUndo={game.undo}
-            onRestart={game.restart}
+            onRestart={() => {
+              game.restart()
+              if (game.mode === 'online' && online.status === 'connected') {
+                online.send({ type: 'restart' })
+              }
+            }}
             onDifficultyChange={game.setDifficulty}
             playerScore={game.playerScore}
             aiScore={game.aiScore}
@@ -221,9 +315,29 @@ function App() {
         onBoardSizeChange={(size) => {
           settingsHook.setBoardSize(size)
           game.changeBoardSize(size)
+          if (game.mode === 'online' && online.status === 'connected') {
+            online.send({ type: 'board_size', size })
+          }
         }}
         animationsEnabled={settingsHook.settings.animationsEnabled}
         onAnimationsChange={settingsHook.setAnimationsEnabled}
+      />
+      <OnlineDialog
+        open={onlineOpen}
+        onClose={() => {
+          if (online.status === 'connected' || online.status === 'idle') {
+            setOnlineOpen(false)
+          }
+        }}
+        status={online.status}
+        roomCode={online.roomCode}
+        isHost={online.isHost}
+        onHost={handleHost}
+        onJoin={handleJoin}
+        onDisconnect={() => {
+          online.disconnect()
+          setOnlineOpen(false)
+        }}
       />
     </main>
   )

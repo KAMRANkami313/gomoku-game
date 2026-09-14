@@ -37,6 +37,7 @@ export interface GomokuState {
 }
 export interface GomokuActions {
   playMove: (row: number, col: number) => void
+  placeStone: (row: number, col: number, player: Player) => void
   undo: () => void
   restart: () => void
   setDifficulty: (d: Difficulty) => void
@@ -255,6 +256,7 @@ export function useGomoku(): GomokuState & GomokuActions {
     aiScore,
     drawScore,
     playMove,
+    placeStone,
     undo,
     restart,
     setDifficulty,
