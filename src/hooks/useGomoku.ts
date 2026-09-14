@@ -29,12 +29,12 @@ export interface GomokuState {
   isAiThinking: boolean
   difficulty: Difficulty
   mode: GameMode
+  boardSize: number
   moveCount: number
   playerScore: number
   aiScore: number
   drawScore: number
 }
-
 export interface GomokuActions {
   playMove: (row: number, col: number) => void
   undo: () => void
@@ -48,10 +48,12 @@ export interface GomokuActions {
     currentPlayer: Player
     moves: MoveRecord[]
   }) => void
+  changeBoardSize: (size: number) => void
 }
 
 export function useGomoku(): GomokuState & GomokuActions {
-  const [board, setBoard] = useState<Board>(() => createEmptyBoard())
+  const [boardSize, setBoardSizeState] = useState<number>(15)
+  const [board, setBoard] = useState<Board>(() => createEmptyBoard(15))
   const [status, setStatus] = useState<GameStatus>('playing')
   const [currentPlayer, setCurrentPlayer] = useState<Player>(HUMAN_PLAYER)
   const [moves, setMoves] = useState<MoveRecord[]>([])
@@ -162,7 +164,7 @@ export function useGomoku(): GomokuState & GomokuActions {
     const keepCount = Math.max(0, moves.length - undoCount)
     const nextPlayer = moves[keepCount].player
 
-    const newBoard = createEmptyBoard()
+    const newBoard = createEmptyBoard(boardSize)
     const kept = moves.slice(0, keepCount)
     for (const m of kept) {
       newBoard[m.row][m.col] = m.player
@@ -181,10 +183,20 @@ export function useGomoku(): GomokuState & GomokuActions {
     )
     setStatus('playing')
     setCurrentPlayer(nextPlayer)
-  }, [moves, status, currentPlayer, mode])
+  }, [moves, status, currentPlayer, mode, boardSize])
 
   const restart = useCallback(() => {
-    setBoard(createEmptyBoard())
+    setBoard(createEmptyBoard(boardSize))
+    setStatus('playing')
+    setCurrentPlayer(HUMAN_PLAYER)
+    setMoves([])
+    setWinningLine(null)
+    setLastMove(null)
+  }, [boardSize])
+
+  const changeBoardSize = useCallback((size: number) => {
+    setBoardSizeState(size)
+    setBoard(createEmptyBoard(size))
     setStatus('playing')
     setCurrentPlayer(HUMAN_PLAYER)
     setMoves([])
@@ -192,13 +204,14 @@ export function useGomoku(): GomokuState & GomokuActions {
     setLastMove(null)
   }, [])
 
-    const restore = useCallback(
+  const restore = useCallback(
     (snapshot: {
       board: Board
       status: GameStatus
       currentPlayer: Player
       moves: MoveRecord[]
     }) => {
+      setBoardSizeState(snapshot.board.length)
       setBoard(snapshot.board)
       setStatus(snapshot.status)
       setCurrentPlayer(snapshot.currentPlayer)
@@ -236,6 +249,7 @@ export function useGomoku(): GomokuState & GomokuActions {
     isAiThinking,
     difficulty,
     mode,
+    boardSize,
     moveCount,
     playerScore,
     aiScore,
@@ -247,5 +261,6 @@ export function useGomoku(): GomokuState & GomokuActions {
     setMode,
     setSoundEnabled,
     restore,
+    changeBoardSize,
   }
 }

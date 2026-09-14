@@ -1,6 +1,5 @@
 import { memo, useMemo } from 'react'
 import type { ReactNode } from 'react'
-import { BOARD_SIZE } from '../lib/types'
 import type { Board, Position } from '../lib/types'
 import '../styles/board.css'
 
@@ -14,16 +13,20 @@ interface GomokuBoardProps {
 
 const CELL = 38
 const PADDING = 24
-const BOARD_PX = (BOARD_SIZE - 1) * CELL + PADDING * 2
 const STONE_RADIUS = CELL * 0.42
 
-const STAR_POINTS: ReadonlyArray<readonly [number, number]> = [
-  [3, 3],
-  [3, 11],
-  [11, 3],
-  [11, 11],
-  [7, 7],
-]
+function getStarPoints(size: number): ReadonlyArray<readonly [number, number]> {
+  const edge = size <= 9 ? 2 : 3
+  const center = Math.floor(size / 2)
+  const far = size - 1 - edge
+  return [
+    [edge, edge],
+    [edge, far],
+    [center, center],
+    [far, edge],
+    [far, far],
+  ]
+}
 
 function GomokuBoardImpl({
   board,
@@ -32,6 +35,9 @@ function GomokuBoardImpl({
   winningLine,
   disabled,
 }: GomokuBoardProps) {
+  const boardSize = board.length
+  const boardPx = (boardSize - 1) * CELL + PADDING * 2
+
   const winSet = useMemo(() => {
     const s = new Set<string>()
     if (winningLine) {
@@ -46,9 +52,9 @@ function GomokuBoardImpl({
   })
 
   const lines: ReactNode[] = []
-  for (let i = 0; i < BOARD_SIZE; i++) {
+  for (let i = 0; i < boardSize; i++) {
     const hStart = toXY(i, 0)
-    const hEnd = toXY(i, BOARD_SIZE - 1)
+    const hEnd = toXY(i, boardSize - 1)
     lines.push(
       <line
         key={`h-${i}`}
@@ -61,7 +67,7 @@ function GomokuBoardImpl({
       />,
     )
     const vStart = toXY(0, i)
-    const vEnd = toXY(BOARD_SIZE - 1, i)
+    const vEnd = toXY(boardSize - 1, i)
     lines.push(
       <line
         key={`v-${i}`}
@@ -75,14 +81,14 @@ function GomokuBoardImpl({
     )
   }
 
-  const stars = STAR_POINTS.map(([r, c]) => {
+  const stars = getStarPoints(boardSize).map(([r, c]) => {
     const { x, y } = toXY(r, c)
     return <circle key={`star-${r}-${c}`} cx={x} cy={y} r={3.4} fill="#3d2817" />
   })
 
   const stones: ReactNode[] = []
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
       const v = board[r][c]
       if (v === 0) continue
       const { x, y } = toXY(r, c)
@@ -132,13 +138,11 @@ function GomokuBoardImpl({
 
   const winningLineElement = useMemo(() => {
     if (!winningLine || winningLine.length < 2) return null
-
     const first = toXY(winningLine[0].row, winningLine[0].col)
     const last = toXY(
       winningLine[winningLine.length - 1].row,
       winningLine[winningLine.length - 1].col,
     )
-
     return (
       <line
         x1={first.x}
@@ -153,12 +157,11 @@ function GomokuBoardImpl({
         pathLength={1}
       />
     )
-    
   }, [winningLine])
 
   const clickTargets: ReactNode[] = []
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
       const { x, y } = toXY(r, c)
       const isEmpty = board[r][c] === 0
       clickTargets.push(
@@ -185,7 +188,7 @@ function GomokuBoardImpl({
   return (
     <div className="gomoku-board">
       <svg
-        viewBox={`0 0 ${BOARD_PX} ${BOARD_PX}`}
+        viewBox={`0 0 ${boardPx} ${boardPx}`}
         className="gomoku-board__svg"
         aria-label="Gomoku game board"
       >

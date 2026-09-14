@@ -1,192 +1,573 @@
 # Gomoku — Five-in-a-Row vs Smart AI
 
-A strategic Gomoku (Five-in-a-Row) game where you play black against a smart AI opponent powered by minimax search with alpha-beta pruning.
+**Live Demo:** https://gomoku-game-ruddy.vercel.app/
 
-## Features
+A polished, responsive Gomoku (Five-in-a-Row) game built with React and TypeScript. Play as Black against a smart AI opponent powered by heuristic evaluation, minimax search, alpha-beta pruning, tactical move detection, and candidate-move optimization.
 
-- **Strategic AI opponent** with three difficulty levels:
-  - **Easy** — heuristic play with light randomness (beatable)
+The game supports multiple board sizes, AI difficulty levels, local two-player mode, persistent game statistics, replay mode, sound effects, dark mode, configurable animations, undo, move history, and keyboard-accessible controls.
+
+---
+
+## ✨ Features
+
+### 🎮 Gameplay
+
+- **Smart AI opponent** with three difficulty levels:
+  - **Easy** — heuristic-based play with light randomness
   - **Medium** — 2-ply minimax search with tactical shortcuts
   - **Hard** — 4-ply minimax with alpha-beta pruning and move ordering
 
-- **Accurate win detection** in all four directions (horizontal, vertical, both diagonals)
+- **Two game modes**
+  - Player vs AI
+  - Local Player vs Player (PvP)
 
-- **Winning-line highlight** — the five stones that form the win are outlined in green
+- **Three board sizes**
+  - 9×9
+  - 13×13
+  - 15×15
 
-- **Last-move marker** — orange dot shows the most recent move
+- **Five-in-a-row win detection** across:
+  - Horizontal lines
+  - Vertical lines
+  - Diagonal lines
+  - Reverse diagonal lines
 
-- **Move history** with standard Gomoku notation (A1–O15)
+- **Animated winning-line highlight**
+- **Last-move indicator** with an orange marker
+- **Undo functionality**
+  - Reverts the player's last move
+  - Also reverts the AI response when playing against the AI
 
-- **Persistent scoreboard** — tracks wins, losses, and draws across games
+- **Move history** using standard Gomoku coordinates such as `A1–O15`
 
-- **Undo** — reverts your last move and the AI's response
+### 🤖 AI System
 
-- **Toast notifications** for win/loss/draw events
+The AI combines several techniques to provide responsive and strategic gameplay:
 
-- **Smooth stone-placement animation**
+- Pattern-based board evaluation
+- Tactical win detection
+- Immediate opponent-threat detection
+- Candidate-move generation around existing stones
+- Heuristic move ordering
+- Minimax search
+- Alpha-beta pruning
+- Limited branching for practical performance
+- Difficulty-specific search behavior
+- Center-position preference on an empty board
 
-- **Fully responsive** — works on mobile and desktop
+The board engine is **size-agnostic**, allowing the same game logic and AI system to operate across all supported board sizes.
 
-## Tech Stack
+### 💾 Persistence & Statistics
 
-- **Vite** — fast dev server and build tool
-- **React 19** — UI library
-- **TypeScript** — type-safe development
-- **Vitest** + **@testing-library/react** — unit and component testing
-- **lucide-react** — icon library
-- **CSS** — custom design system with CSS variables (no UI framework)
+- **Automatic game-state saving**
+- Resume game state after refreshing the page
+- Persistent game statistics
+- Wins
+- Losses
+- Draws
+- Win streaks
+- Average moves per win
+- Persistent user settings
+- Board size
+- Animation preference
+- Theme preference
+- Sound preference
 
-## Getting Started
+### 🎨 User Experience
+
+- **Light, dark, and system themes**
+- Live synchronization with the operating system theme
+- Synthesized sound effects using the **Web Audio API**
+- No external audio files required
+- Sound mute toggle
+- Toast notifications for game events
+- Configurable stone-placement animations
+- Replay mode with:
+  - Move-by-move navigation
+  - Automatic playback
+
+- Responsive layout for:
+  - Mobile
+  - Tablet
+  - Desktop
+
+- Keyboard accessibility
+- Escape key support for closing dialogs
+- Settings dialog with board-size and animation controls
+
+---
+
+## 🧠 How the AI Works
+
+The AI is designed around a combination of tactical checks and search-based decision making.
+
+### 1. Tactical Shortcuts
+
+Before performing a deeper search, the AI checks for immediate tactical opportunities:
+
+1. Can the AI win immediately?
+2. Does the opponent have an immediate winning move?
+3. If so, win or block before continuing with normal search.
+
+This prevents unnecessary search when an obvious tactical move exists.
+
+### 2. Heuristic Evaluation
+
+The board is evaluated using Gomoku patterns such as:
+
+- Five in a row
+- Open four
+- Four
+- Open three
+- Three
+- Open two
+- Two
+- Single stones
+
+Open-ended patterns receive higher scores because they provide stronger future opportunities.
+
+### 3. Candidate Move Generation
+
+Instead of evaluating every empty cell on the board, the engine generates candidate moves near existing stones.
+
+This significantly reduces the number of positions that need to be considered during search.
+
+### 4. Minimax Search
+
+Medium and Hard difficulty use minimax search to evaluate possible future positions.
+
+The search alternates between:
+
+- Maximizing the AI's position
+- Minimizing the opponent's position
+
+### 5. Alpha-Beta Pruning
+
+Hard difficulty uses alpha-beta pruning to eliminate branches that cannot improve the final decision.
+
+This allows deeper strategic search without evaluating every possible branch.
+
+### 6. Move Ordering and Branch Limiting
+
+Candidate moves are scored heuristically and ordered before minimax explores them.
+
+The search considers the strongest candidates first and limits the number of branches explored, keeping the AI responsive while maintaining strong tactical play.
+
+---
+
+## 🏗️ Architecture
+
+The project follows a modular architecture that separates game logic from React UI concerns.
+
+### Core Game Logic
+
+Located in `src/lib/`.
+
+Responsible for:
+
+- Board representation
+- Move validation
+- Win detection
+- Candidate generation
+- AI evaluation
+- Minimax search
+- Statistics
+- Game-state serialization
+- Local storage
+- Sound generation
+
+The core game logic does not depend on React.
+
+### React Hooks
+
+Located in `src/hooks/`.
+
+Custom hooks manage application state and coordinate the game engine with the UI.
+
+Examples include:
+
+- Game state orchestration
+- Theme management
+- Sound preferences
+- Statistics tracking
+- Settings
+- Toast notifications
+- Game persistence
+- Replay navigation
+
+### UI Components
+
+Located in `src/components/`.
+
+The UI is divided into focused components for:
+
+- Board rendering
+- Game controls
+- Statistics
+- Mode selection
+- Theme controls
+- Sound controls
+- Settings
+- Replay controls
+- Toast notifications
+
+This keeps responsibilities separated and makes the application easier to maintain and extend.
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology          | Purpose                                         |
+| ------------------- | ----------------------------------------------- |
+| **Vite**            | Development server and production build tooling |
+| **React 19**        | User interface                                  |
+| **TypeScript**      | Type-safe application development               |
+| **Vitest**          | Unit and integration testing                    |
+| **Testing Library** | React component and hook testing                |
+| **lucide-react**    | Interface icons                                 |
+| **CSS**             | Custom design system and responsive styling     |
+| **Web Audio API**   | Synthesized game sound effects                  |
+| **localStorage**    | Persistent game state, settings, and statistics |
+
+No UI framework is used; the interface is built with custom CSS and CSS variables.
+
+---
+
+## 📁 Project Structure
+
+```text
+gomoku-game/
+├── src/
+│   ├── lib/
+│   │   ├── types.ts
+│   │   ├── logic.ts
+│   │   ├── ai.ts
+│   │   ├── stats.ts
+│   │   ├── sound.ts
+│   │   ├── gameState.ts
+│   │   └── storage.ts
+│   │
+│   ├── hooks/
+│   │   ├── useGomoku.ts
+│   │   ├── useTheme.ts
+│   │   ├── useSound.ts
+│   │   ├── useStats.ts
+│   │   ├── useSettings.ts
+│   │   ├── useToast.ts
+│   │   ├── useGamePersistence.ts
+│   │   └── useReplay.ts
+│   │
+│   ├── components/
+│   │   ├── GomokuBoard.tsx
+│   │   ├── GamePanel.tsx
+│   │   ├── StatsPanel.tsx
+│   │   ├── ModeSelector.tsx
+│   │   ├── ThemeToggle.tsx
+│   │   ├── SoundToggle.tsx
+│   │   ├── SettingsDialog.tsx
+│   │   ├── ReplayBar.tsx
+│   │   └── ToastContainer.tsx
+│   │
+│   └── styles/
+│       ├── app.css
+│       ├── game.css
+│       ├── board.css
+│       └── toast.css
+│
+├── .github/
+│   └── workflows/
+│
+├── README.md
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── vitest.config.ts
+```
+
+### Core Modules
+
+| Module         | Responsibility                                                     |
+| -------------- | ------------------------------------------------------------------ |
+| `types.ts`     | Types, constants, board creation, and board utilities              |
+| `logic.ts`     | Move validation, win detection, game status, candidate moves       |
+| `ai.ts`        | Heuristic evaluation, tactical checks, minimax, alpha-beta pruning |
+| `stats.ts`     | Game statistics calculation                                        |
+| `sound.ts`     | Web Audio API sound synthesis                                      |
+| `gameState.ts` | Game-state serialization and deserialization                       |
+| `storage.ts`   | Persistent localStorage abstraction                                |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ (LTS recommended)
-- npm 9+
+Make sure you have the following installed:
+
+- Node.js 18 or later
+- npm 9 or later
 
 ### Installation
 
+Clone the repository:
+
 ```bash
-git clone https://github.com/KAMRANSKI313/gomoku-game.git
-
+git clone https://github.com/KAMRANkami313/gomoku-game.git
 cd gomoku-game
+```
 
+Install dependencies:
+
+```bash
 npm install
 ```
 
-### Run the dev server
+### Start the Development Server
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:5173/ in your browser.
+Open the local development URL shown by Vite, typically:
 
-### Run tests
+```text
+http://localhost:5173/
+```
+
+---
+
+## 🧪 Testing
+
+The project includes automated unit, hook, and component tests.
+
+Run the complete test suite:
 
 ```bash
 npm test
 ```
 
-### Run tests in watch mode
+The current test suite contains:
 
-```bash
-npm test -- --watch
-```
+- **19 test files**
+- **210 automated tests**
+- **210 passing tests**
 
-### Build for production
+The tests cover core game logic, AI behavior, React hooks, board rendering, game controls, statistics, settings, replay functionality, and UI components.
+
+---
+
+## 🏭 Production Build
+
+Create an optimized production build:
 
 ```bash
 npm run build
 ```
 
-Output is in the `dist/` folder.
-
-### Preview the production build
+Preview the production build locally:
 
 ```bash
 npm run preview
 ```
 
-### Lint
+Run the linter:
 
 ```bash
 npm run lint
 ```
 
-## Project Structure
+---
+
+## 🎯 Supported Board Sizes
+
+The game supports three board configurations:
+
+| Board     | Use Case                             |
+| --------- | ------------------------------------ |
+| **9×9**   | Smaller and faster games             |
+| **13×13** | Balanced gameplay                    |
+| **15×15** | Standard full-size Gomoku experience |
+
+The game engine derives its dimensions from the active board rather than relying on a fixed board size, allowing the core logic to work across all supported configurations.
+
+---
+
+## 🎮 Game Modes
+
+### Player vs AI
+
+You play as Black while the AI controls the opposing player.
+
+Choose between:
+
+- Easy
+- Medium
+- Hard
+
+### Local PvP
+
+Two players can play against each other locally on the same device.
+
+The same board, move history, win detection, statistics, and game controls are available in PvP mode.
+
+---
+
+## 🔄 Replay Mode
+
+Completed games can be reviewed using Replay Mode.
+
+Replay provides:
+
+- Move-by-move navigation
+- Previous and next move controls
+- Automatic playback
+- Review of completed game sequences
+
+This makes it possible to analyze previous games and understand how the match developed.
+
+---
+
+## 💾 Data Persistence
+
+The application uses browser `localStorage` to persist relevant game information.
+
+Persisted data includes:
+
+- Current game state
+- Game statistics
+- Theme preference
+- Sound preference
+- Board size
+- Animation preference
+
+Refreshing the browser does not automatically remove these saved preferences and statistics.
+
+---
+
+## ♿ Accessibility
+
+Accessibility is considered throughout the interface.
+
+The application includes:
+
+- Keyboard-accessible controls
+- Escape key support for dialogs
+- Accessible button labels
+- Focus-aware dialog interactions
+- Responsive layouts
+- Theme support
+- Clear visual game-state indicators
+
+---
+
+## 📱 Responsive Design
+
+The interface is designed to work across different screen sizes:
+
+- Mobile phones
+- Tablets
+- Laptops
+- Desktop displays
+
+The board and game controls adapt to available screen space while maintaining usable interaction areas.
+
+---
+
+## 🌐 Deployment
+
+The application is deployed as a production web application and is available at:
+
+**https://gomoku-game-ruddy.vercel.app/**
+
+---
+
+## 📌 Key Design Decisions
+
+### Size-Agnostic Game Engine
+
+The game engine derives board dimensions from the actual board state instead of assuming a single fixed size.
+
+This allows the same game logic to support:
 
 ```text
-gomoku-game/
-
-├── src/
-│   ├── lib/                    # Pure game logic (no React)
-│   │   ├── types.ts            # Type definitions + constants
-│   │   ├── logic.ts            # Move validation, win detection, candidate moves
-│   │   ├── ai.ts               # Minimax + alpha-beta + pattern heuristic
-│   │   ├── logic.test.ts       # Logic tests
-│   │   └── ai.test.ts          # AI tests
-│   │
-│   ├── hooks/                  # Custom React hooks
-│   │   ├── useGomoku.ts        # Game state orchestration
-│   │   ├── useGomoku.test.ts   # Hook tests
-│   │   ├── useToast.ts         # Toast notifications
-│   │   └── useToast.test.ts    # Toast tests
-│   │
-│   ├── components/             # React UI components
-│   │   ├── GomokuBoard.tsx     # SVG board renderer
-│   │   ├── GomokuBoard.test.tsx
-│   │   ├── GamePanel.tsx       # Side panel (status, scores, controls, history)
-│   │   └── ToastContainer.tsx  # Toast notifications UI
-│   │
-│   ├── styles/                 # CSS files
-│   │   ├── app.css             # Design tokens + app layout
-│   │   ├── game.css            # Game layout + panel styles
-│   │   ├── board.css           # Board animations
-│   │   └── toast.css            # Toast styles
-│   │
-│   ├── test-setup.ts            # Vitest cleanup setup
-│   ├── App.tsx                  # Root component
-│   └── main.tsx                 # App entry point
-│
-├── index.html
-├── vite.config.ts
-├── tsconfig.json
-├── package.json
-└── README.md
+9×9
+13×13
+15×15
 ```
 
-## Architecture
+without duplicating game rules.
 
-The project follows a modular, separation-of-concerns architecture:
+### Modular Separation
 
-1. **Pure logic layer (`src/lib/`)** — game types, rules, and AI. No React dependencies. Fully testable in isolation.
+Game logic is kept separate from React components.
 
-2. **State orchestration layer (`src/hooks/`)** — React hooks that manage game state (`useGomoku`) and UI state (`useToast`). The `useGomoku` hook owns board state, turn flow, AI move scheduling, undo, restart, and score tracking.
+This makes the core engine easier to:
 
-3. **Presentation layer (`src/components/`)** — pure components that receive props and render. No state management (all state lives in hooks). `GomokuBoard` renders the SVG board; `GamePanel` renders the side panel; `ToastContainer` renders notifications.
+- Test
+- Maintain
+- Extend
+- Reuse
 
-## How the AI Works
+### Practical AI Search
 
-The AI uses a pattern-based heuristic combined with minimax search:
+The AI does not blindly search every possible board position.
 
-1. **Pattern scoring** — each board position is evaluated by detecting stone shapes:
-   - Open four (unstoppable) → 1,000,000 points
-   - Four (one end blocked) → 100,000 points
-   - Open three (threatens to become open four) → 10,000 points
-   - Three → 1,000 points
-   - Open two → 100 points
-   - Two → 10 points
+Instead, it combines:
 
-2. **Tactical shortcuts** — before running the expensive search:
-   - If the AI can win immediately, it does
-   - If the opponent threatens to win next move, it blocks
-
-3. **Minimax with alpha-beta pruning** — searches the game tree to the configured depth:
-   - Easy: depth 0 (heuristic only + randomness)
-   - Medium: depth 2
-   - Hard: depth 4
-
-4. **Move ordering** — candidates are sorted by heuristic score so alpha-beta prunes more aggressively.
-
-5. **Candidate pruning** — only cells within a 1–2 cell radius of existing stones are considered, reducing the search space from 225 to ~20–40 cells.
-
-## Testing
-
-The project has 93 automated tests across 6 test files:
-
-| File                   | Tests | What it covers                                          |
-| ---------------------- | ----: | ------------------------------------------------------- |
-| `logic.test.ts`        |    18 | Move validation, win detection, candidate moves         |
-| `ai.test.ts`           |    17 | Win finding, blocking, strategic play, board evaluation |
-| `useGomoku.test.ts`    |    20 | Game state, turn flow, undo, restart, difficulty        |
-| `useToast.test.ts`     |     5 | Toast show, auto-dismiss, manual dismiss                |
-| `GomokuBoard.test.tsx` |    13 | Board rendering, stones, clicks, markers, highlight     |
-| `GamePanel.test.tsx`   |    19 | Status banner, scoreboard, controls, history            |
-
-## License
-
-MIT
-
+```text
+Tactical Checks
+      ↓
+Candidate Generation
+      ↓
+Heuristic Scoring
+      ↓
+Move Ordering
+      ↓
+Minimax Search
+      ↓
+Alpha-Beta Pruning
+      ↓
+Selected Move
 ```
 
-```
+This provides a practical balance between strategic strength and browser performance.
+
+---
+
+## 📊 Project Highlights
+
+- React 19 application
+- Strict TypeScript architecture
+- Three configurable board sizes
+- Three AI difficulty levels
+- Minimax with alpha-beta pruning
+- Tactical win/block detection
+- Heuristic pattern evaluation
+- Candidate move pruning
+- PvP and AI game modes
+- Replay system
+- Persistent statistics
+- Persistent settings
+- Dark/light/system themes
+- Web Audio API sound effects
+- Responsive UI
+- Keyboard accessibility
+- Automated test coverage
+- 204 passing tests
+- Production deployment on Vercel
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## 👤 Author
+
+**Muhammad Kamran**
+
+GitHub: https://github.com/KAMRANkami313
+
+Live Project: https://gomoku-game-ruddy.vercel.app/

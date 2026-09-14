@@ -1,8 +1,7 @@
 import {
   DIRECTIONS,
-  BOARD_SIZE,
-  WIN_LENGTH,
   inBounds,
+  getWinLength,
 } from './types'
 import type {
   Board,
@@ -16,7 +15,7 @@ export function isLegalMove(
   row: number,
   col: number,
 ): boolean {
-  return inBounds(row, col) && board[row][col] === 0
+  return inBounds(row, col, board.length) && board[row][col] === 0
 }
 
 export function applyMove(
@@ -41,7 +40,7 @@ function countDirection(
   let count = 0
   let r = row + dr
   let c = col + dc
-  while (inBounds(r, c) && board[r][c] === player) {
+  while (inBounds(r, c, board.length) && board[r][c] === player) {
     count += 1
     r += dr
     c += dc
@@ -56,21 +55,22 @@ export function detectWin(
 ): Position[] | null {
   const player = board[row][col] as Player
   if (player !== 1 && player !== 2) return null
+  const winLength = getWinLength(board.length)
 
   for (const [dr, dc] of DIRECTIONS) {
     const forward = countDirection(board, row, col, dr, dc, player)
     const backward = countDirection(board, row, col, -dr, -dc, player)
     const total = forward + backward + 1
 
-    if (total >= WIN_LENGTH) {
+    if (total >= winLength) {
       const line: Position[] = [{ row, col }]
 
       let r = row + dr
       let c = col + dc
       while (
-        inBounds(r, c) &&
+        inBounds(r, c, board.length) &&
         board[r][c] === player &&
-        line.length < WIN_LENGTH
+        line.length < winLength
       ) {
         line.push({ row: r, col: c })
         r += dr
@@ -80,9 +80,9 @@ export function detectWin(
       r = row - dr
       c = col - dc
       while (
-        inBounds(r, c) &&
+        inBounds(r, c, board.length) &&
         board[r][c] === player &&
-        line.length < WIN_LENGTH
+        line.length < winLength
       ) {
         line.unshift({ row: r, col: c })
         r -= dr
@@ -108,7 +108,8 @@ export function getGameStatus(
     }
   }
 
-  if (moveCount >= BOARD_SIZE * BOARD_SIZE) {
+  const totalCells = board.length * board.length
+  if (moveCount >= totalCells) {
     return 'draw'
   }
 
@@ -121,16 +122,17 @@ export function getCandidateMoves(
 ): Position[] {
   const candidates: Position[] = []
   const seen = new Set<string>()
+  const size = board.length
 
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       if (board[r][c] === 0) continue
 
       for (let dr = -radius; dr <= radius; dr++) {
         for (let dc = -radius; dc <= radius; dc++) {
           const nr = r + dr
           const nc = c + dc
-          if (!inBounds(nr, nc) || board[nr][nc] !== 0) continue
+          if (!inBounds(nr, nc, size) || board[nr][nc] !== 0) continue
           const key = nr + ',' + nc
           if (seen.has(key)) continue
           seen.add(key)
@@ -142,8 +144,8 @@ export function getCandidateMoves(
 
   if (candidates.length === 0) {
     candidates.push({
-      row: Math.floor(BOARD_SIZE / 2),
-      col: Math.floor(BOARD_SIZE / 2),
+      row: Math.floor(size / 2),
+      col: Math.floor(size / 2),
     })
   }
 

@@ -7,7 +7,6 @@ import {
   Trophy,
   Undo2,
 } from 'lucide-react'
-import { BOARD_SIZE } from '../lib/types'
 import type {
   Difficulty,
   GameStatus,
@@ -21,6 +20,7 @@ interface GamePanelProps {
   difficulty: Difficulty
   isAiThinking: boolean
   moves: MoveRecord[]
+  boardSize: number
   onUndo: () => void
   onRestart: () => void
   onDifficultyChange: (d: Difficulty) => void
@@ -43,9 +43,9 @@ function moveLabel(player: Player): string {
   return player === 1 ? 'Black' : 'White'
 }
 
-function coordinateLabel(row: number, col: number): string {
+function coordinateLabel(row: number, col: number, boardSize: number): string {
   const colLetter = String.fromCharCode('A'.charCodeAt(0) + col)
-  const rowNum = BOARD_SIZE - row
+  const rowNum = boardSize - row
   return `${colLetter}${rowNum}`
 }
 
@@ -113,6 +113,7 @@ export function GamePanel({
   difficulty,
   isAiThinking,
   moves,
+  boardSize,
   onUndo,
   onRestart,
   onDifficultyChange,
@@ -238,7 +239,7 @@ export function GamePanel({
                   {moveLabel(m.player)}
                 </span>
                 <span className="game-panel__move-coord">
-                  {coordinateLabel(m.row, m.col)}
+                {coordinateLabel(m.row, m.col, boardSize)}
                 </span>
               </div>
             ))

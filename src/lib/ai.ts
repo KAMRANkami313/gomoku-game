@@ -1,8 +1,7 @@
 import {
   DIRECTIONS,
-  BOARD_SIZE,
-  WIN_LENGTH,
   inBounds,
+  getWinLength,
 } from './types'
 import type {
   Board,
@@ -34,28 +33,28 @@ function evalLine(
   let count = 1
   let r = row + dr
   let c = col + dc
-  while (inBounds(r, c) && board[r][c] === player) {
+  while (inBounds(r, c, board.length) && board[r][c] === player) {
     count += 1
     r += dr
     c += dc
   }
-  const forwardOpen = inBounds(r, c) && board[r][c] === 0
+  const forwardOpen = inBounds(r, c, board.length) && board[r][c] === 0
 
   r = row - dr
   c = col - dc
-  while (inBounds(r, c) && board[r][c] === player) {
+  while (inBounds(r, c, board.length) && board[r][c] === player) {
     count += 1
     r -= dr
     c -= dc
   }
-  const backwardOpen = inBounds(r, c) && board[r][c] === 0
+  const backwardOpen = inBounds(r, c, board.length) && board[r][c] === 0
 
   const openEnds = (forwardOpen ? 1 : 0) + (backwardOpen ? 1 : 0)
   return { count, openEnds }
 }
 
-function scoreShape(count: number, openEnds: number): number {
-  if (count >= WIN_LENGTH) return SCORE.FIVE
+function scoreShape(count: number, openEnds: number, winLength: number): number {
+  if (count >= winLength) return SCORE.FIVE
   if (count === 4) {
     if (openEnds === 2) return SCORE.OPEN_FOUR
     if (openEnds === 1) return SCORE.FOUR
@@ -81,9 +80,11 @@ function scoreShape(count: number, openEnds: number): number {
 export function evaluateBoard(board: Board, evaluator: Player): number {
   let scoreForEvaluator = 0
   let scoreForOpponent = 0
+  const size = board.length
+  const winLength = getWinLength(size)
 
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       const cell = board[r][c]
       if (cell === 0) continue
       const player = cell as Player
@@ -91,11 +92,11 @@ export function evaluateBoard(board: Board, evaluator: Player): number {
       for (const [dr, dc] of DIRECTIONS) {
         const prevR = r - dr
         const prevC = c - dc
-        if (inBounds(prevR, prevC) && board[prevR][prevC] === player) {
+        if (inBounds(prevR, prevC, size) && board[prevR][prevC] === player) {
           continue
         }
         const { count, openEnds } = evalLine(board, r, c, dr, dc, player)
-        const s = scoreShape(count, openEnds)
+        const s = scoreShape(count, openEnds, winLength)
         if (player === evaluator) scoreForEvaluator += s
         else scoreForOpponent += s
       }
@@ -114,17 +115,18 @@ function scoreMove(
   const opponent: Player = player === 1 ? 2 : 1
   let myScore = 0
   let oppScore = 0
+    const winLength = getWinLength(board.length)
 
   board[row][col] = player
   for (const [dr, dc] of DIRECTIONS) {
     const { count, openEnds } = evalLine(board, row, col, dr, dc, player)
-    myScore += scoreShape(count, openEnds)
+      myScore += scoreShape(count, openEnds, winLength)
   }
 
   board[row][col] = opponent
   for (const [dr, dc] of DIRECTIONS) {
     const { count, openEnds } = evalLine(board, row, col, dr, dc, opponent)
-    oppScore += scoreShape(count, openEnds)
+      oppScore += scoreShape(count, openEnds, winLength)
   }
 
   board[row][col] = 0
@@ -235,21 +237,30 @@ function minimax(
   }
 }
 
+function getDepthForDifficulty(difficulty: Difficulty, boardSize: number): number {
+  if (difficulty === 'easy') return 0
+  if (difficulty === 'medium') return 2
+  if (boardSize <= 9) return 4
+  if (boardSize <= 13) return 4
+  return 4
+}
+
 export function chooseAIMove(
   board: Board,
   aiPlayer: Player,
   difficulty: Difficulty,
 ): Position {
+  const size = board.length
   let anyStone = false
-  for (let r = 0; r < BOARD_SIZE && !anyStone; r++) {
-    for (let c = 0; c < BOARD_SIZE && !anyStone; c++) {
+  for (let r = 0; r < size && !anyStone; r++) {
+    for (let c = 0; c < size && !anyStone; c++) {
       if (board[r][c] !== 0) anyStone = true
     }
   }
   if (!anyStone) {
     return {
-      row: Math.floor(BOARD_SIZE / 2),
-      col: Math.floor(BOARD_SIZE / 2),
+      row: Math.floor(size / 2),
+      col: Math.floor(size / 2),
     }
   }
 
@@ -276,7 +287,7 @@ export function chooseAIMove(
     return scored[idx].move
   }
 
-  const depth = difficulty === 'medium' ? 2 : 4
+  const depth = getDepthForDifficulty(difficulty, size)
   const workingBoard = board.map((row) => [...row])
   const result = minimax(
     workingBoard,

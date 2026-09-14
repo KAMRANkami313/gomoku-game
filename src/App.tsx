@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { Sparkles, Trophy, Brain } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Sparkles, Trophy, Brain, Settings } from 'lucide-react'
 import { GomokuBoard } from './components/GomokuBoard'
 import { GamePanel } from './components/GamePanel'
 import { ToastContainer } from './components/ToastContainer'
@@ -8,6 +8,8 @@ import { useTheme } from './hooks/useTheme'
 import { StatsPanel } from './components/StatsPanel'
 import { useStats } from './hooks/useStats'
 import { ModeSelector } from './components/ModeSelector'
+import { SettingsDialog } from './components/SettingsDialog'
+import { useSettings } from './hooks/useSettings'
 import { SoundToggle } from './components/SoundToggle'
 import { useSound } from './hooks/useSound'
 import { ReplayBar } from './components/ReplayBar'
@@ -26,6 +28,8 @@ function App() {
   const toast = useToast()
   const theme = useTheme()
   const sound = useSound()
+  const settingsHook = useSettings()
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const statsHook = useStats(game.status, game.moveCount)
   const prevStatusRef = useRef<GameStatus>('playing')
 
@@ -38,6 +42,7 @@ function App() {
     game.difficulty,
     game.restore,
   )
+
 
   const gameComplete = game.status !== 'playing'
   const replay = useReplay(game.moves, gameComplete)
@@ -72,8 +77,8 @@ function App() {
 
   const displayBoard = useMemo(() => {
     if (!replay.active) return game.board
-    return buildBoardFromMoves(game.moves, replay.step)
-  }, [replay.active, replay.step, game.board, game.moves])
+    return buildBoardFromMoves(game.moves, replay.step, game.boardSize)
+  }, [replay.active, replay.step, game.board, game.moves, game.boardSize])
 
   const displayLastMove = useMemo(() => {
     if (!replay.active) return game.lastMove
@@ -127,6 +132,15 @@ function App() {
           </div>
           <ThemeToggle mode={theme.mode} onToggle={theme.toggle} />
           <SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />
+                    <button
+            type="button"
+            className="settings-btn"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Open settings"
+            title="Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </header>
 
@@ -175,6 +189,7 @@ function App() {
             difficulty={game.difficulty}
             isAiThinking={game.isAiThinking}
             moves={game.moves}
+            boardSize={game.boardSize}
             onUndo={game.undo}
             onRestart={game.restart}
             onDifficultyChange={game.setDifficulty}
@@ -193,12 +208,23 @@ function App() {
             {difficultyLabel}
           </span>
           <span style={{ opacity: 0.7 }}>
-            Standard 15×15 board · Five-in-a-row wins
+            {game.boardSize}×{game.boardSize} board · {game.boardSize <= 9 ? 'Three' : game.boardSize <= 13 ? 'Four' : 'Five'}-in-a-row wins
           </span>
         </div>
       </footer>
 
       <ToastContainer toasts={toast.toasts} onDismiss={toast.dismiss} />
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        boardSize={settingsHook.settings.boardSize}
+        onBoardSizeChange={(size) => {
+          settingsHook.setBoardSize(size)
+          game.changeBoardSize(size)
+        }}
+        animationsEnabled={settingsHook.settings.animationsEnabled}
+        onAnimationsChange={settingsHook.setAnimationsEnabled}
+      />
     </main>
   )
 }

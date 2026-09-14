@@ -48,8 +48,12 @@ export function deserializeGame(raw: string): GameSnapshot | null {
   }
 }
 
-export function buildBoardFromMoves(moves: MoveRecord[], upToIndex: number): Board {
-  const board = createEmptyBoard()
+export function buildBoardFromMoves(
+  moves: MoveRecord[],
+  upToIndex: number,
+  boardSize: number = 15,
+): Board {
+  const board = createEmptyBoard(boardSize)
   const limit = Math.min(upToIndex, moves.length)
   for (let i = 0; i < limit; i++) {
     const m = moves[i]

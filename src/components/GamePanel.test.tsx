@@ -18,6 +18,7 @@ const defaultProps = {
   difficulty: 'medium' as const,
   isAiThinking: false,
   moves: [] as MoveRecord[],
+  boardSize: 15,
   onUndo: () => {},
   onRestart: () => {},
   onDifficultyChange: () => {},
