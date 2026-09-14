@@ -69,7 +69,7 @@ describe('OnlineDialog', () => {
     const { getByText } = render(
       <OnlineDialog {...defaultProps} status="hosting" />,
     )
-    expect(getByText('Waiting for opponent…')).toBeTruthy()
+    expect(getByText('Waiting for opponent to join…')).toBeTruthy()
   })
 
   it('shows connecting message when joining', () => {

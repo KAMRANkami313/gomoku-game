@@ -2,6 +2,7 @@ import type { Board, GameStatus, MoveRecord, Player } from './types'
 
 export type OnlineMessage =
   | { type: 'move'; row: number; col: number; player: Player }
+  | { type: 'undo' }
   | { type: 'restart' }
   | { type: 'board_size'; size: number }
   | {
@@ -56,6 +57,10 @@ export function createMoveMessage(
 
 export function createRestartMessage(): OnlineMessage {
   return { type: 'restart' }
+}
+
+export function createUndoMessage(): OnlineMessage {
+  return { type: 'undo' }
 }
 
 export function createBoardSizeMessage(size: number): OnlineMessage {

@@ -39,6 +39,8 @@ function App() {
   const handleOnlineMessage = useCallback((msg: OnlineMessage) => {
     if (msg.type === 'move') {
       game.placeStone(msg.row, msg.col, msg.player)
+    } else if (msg.type === 'undo') {
+      game.undo()
     } else if (msg.type === 'restart') {
       game.restart()
     } else if (msg.type === 'board_size') {
@@ -68,6 +70,7 @@ function App() {
       }
     },
     onDisconnected: () => {
+      game.setMode('ai')
       setOnlineOpen(true)
     },
   })
@@ -279,7 +282,12 @@ function App() {
             isAiThinking={game.isAiThinking}
             moves={game.moves}
             boardSize={game.boardSize}
-            onUndo={game.undo}
+            onUndo={() => {
+              game.undo()
+              if (game.mode === 'online' && online.status === 'connected') {
+                online.send({ type: 'undo' })
+              }
+            }}
             onRestart={() => {
               game.restart()
               if (game.mode === 'online' && online.status === 'connected') {
@@ -336,6 +344,7 @@ function App() {
         onJoin={handleJoin}
         onDisconnect={() => {
           online.disconnect()
+          game.setMode('ai')
           setOnlineOpen(false)
         }}
       />
